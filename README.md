@@ -1,5 +1,7 @@
 # tf-atom-iam-policy-aws
 
+> Terraform atom that creates a single AWS IAM managed policy from a JSON policy document, with tf-label naming/tagging and conditional creation.
+
 [![CI](https://github.com/PlatformStackPulse/tf-atom-iam-policy-aws/actions/workflows/ci.yml/badge.svg)](https://github.com/PlatformStackPulse/tf-atom-iam-policy-aws/actions/workflows/ci.yml)
 [![Release](https://github.com/PlatformStackPulse/tf-atom-iam-policy-aws/actions/workflows/auto-release.yml/badge.svg)](https://github.com/PlatformStackPulse/tf-atom-iam-policy-aws/actions/workflows/auto-release.yml)
 [![CodeQL](https://github.com/PlatformStackPulse/tf-atom-iam-policy-aws/actions/workflows/codeql.yml/badge.svg)](https://github.com/PlatformStackPulse/tf-atom-iam-policy-aws/actions/workflows/codeql.yml)
@@ -169,6 +171,32 @@ module "role_attachment" {
 | <a name="output_policy_id"></a> [policy\_id](#output\_policy\_id) | ID of the IAM policy |
 | <a name="output_policy_name"></a> [policy\_name](#output\_policy\_name) | Name of the IAM policy |
 <!-- END_TF_DOCS -->
+
+## Tests
+
+Unit tests use the native `terraform test` framework with a mocked AWS provider (no real
+AWS calls, no credentials required). Assertions cover only plan-known values — the
+tf-label `id` used as the policy name (`eg-test-thing`), resource count, and the
+`enabled` output — since computed attributes such as `arn`/`policy_id` are unknown under a
+mock provider.
+
+```bash
+# Unit tests (mocked provider, no AWS credentials)
+make test-unit
+# or directly:
+terraform init -backend=false
+terraform test -test-directory=tests/unit
+
+# Integration tests (real AWS credentials required)
+make test-integration
+```
+
+Covered scenarios:
+
+| Test | Asserts |
+|------|---------|
+| `creates_when_enabled` | `enabled == true`, exactly one `aws_iam_policy` planned, `policy_name == "eg-test-thing"` |
+| `disabled_creates_nothing` | `enabled == false`, zero resources planned, `policy_arn == null` |
 
 ## Contributing
 
